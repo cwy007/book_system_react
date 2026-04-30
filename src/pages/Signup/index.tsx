@@ -1,16 +1,23 @@
 import { Button, Form, Input, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { login, type UserPayload } from "../interfaces";
-import styles from "./Login.module.css";
+import { register, type UserPayload } from "../../interfaces";
+import styles from "../Login/index.module.css";
 
-function Login() {
+interface SignupForm extends UserPayload {
+  confirmPassword: string;
+}
+
+function Signup() {
   const navigate = useNavigate();
 
-  const onFinish = async (values: UserPayload) => {
+  const onFinish = async (values: SignupForm) => {
     try {
-      const res = await login(values);
-      message.success(`登录成功，欢迎 ${res.username}`);
-      navigate("/");
+      const res = await register({
+        username: values.username,
+        password: values.password,
+      });
+      message.success(`注册成功：${res.username}`);
+      navigate("/login");
     } catch (e) {
       message.error((e as Error).message);
     }
@@ -38,13 +45,32 @@ function Login() {
           <Input.Password placeholder="请输入" />
         </Form.Item>
 
+        <Form.Item
+          label="确认密码"
+          name="confirmPassword"
+          dependencies={["password"]}
+          rules={[
+            { required: true, message: "请再次输入密码" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("两次输入的密码不一致"));
+              },
+            }),
+          ]}
+        >
+          <Input.Password placeholder="请输入" />
+        </Form.Item>
+
         <Form.Item wrapperCol={{ offset: 6, span: 18 }} className={styles.tip}>
-          <Link to="/signup">没有账号？去注册</Link>
+          <Link to="/login">已有账号？去登录</Link>
         </Form.Item>
 
         <Form.Item wrapperCol={{ offset: 6, span: 18 }}>
           <Button type="primary" htmlType="submit" className={styles.btn}>
-            登录
+            注册
           </Button>
         </Form.Item>
       </Form>
@@ -52,4 +78,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;
